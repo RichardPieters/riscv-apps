@@ -2,13 +2,13 @@
 snakeStartIndex:
     .word -4
 snakeLength:
-    .word 12
+    .word 12 # start length of snake (pixel count * 4)
 snakeBufferMaxLength:
-    .word 64
+    .word 64 # snake pixel count * 4 -> determines buffer size for snake position
 berryLocation:
     .half 4,3
 weylSequence:
-    .word 0xda1ce2a9
+    .word 0xda1ce2a9 # sequence similar to the Weyl sequence; helps reduce repeated random values.
 randomSeed:
     .word 234
 randomNumber:
@@ -19,10 +19,10 @@ snake:
 .text
 
 start:
-    li s0 12 #x-pos
-    li s1 17 #y-pos
-    li s2 0 #direction up, down, left, right
-    li s11 0 #timer
+    li s0 12 # x-pos
+    li s1 17 # y-pos
+    li s2 0 # direction up, down, left, right
+    li s11 0 # timer
     
     jal ra updateSnake
     jal ra updateBerryLocation
@@ -41,7 +41,7 @@ mainTick:
     
     jal ra drawSnake
     
-    li s11 1000
+    li s11 1000 # change to set simulation speed
     jal x0 main
     
 checkInput:
@@ -93,7 +93,7 @@ move:
 move_up:
     addi s1 s1 -1
     li t3 0
-    bge s1 t3 updateSnake 	#branch if greater or equal
+    bge s1 t3 updateSnake 	# branch if greater or equal
     addi s1 t2 -1
     jal x0 updateSnake
 
@@ -114,31 +114,31 @@ move_down:
 move_left:
     addi s0 s0 -1
     li t3 0
-    bge s0 t3 updateSnake 	#branch if greater or equal
+    bge s0 t3 updateSnake 	# branch if greater or equal
     addi s0 t1 -1
     jal x0 updateSnake
 move_ret:
     jal x0 updateSnake
     
 updateSnake:
-    #increment snake index
+    # increment snake index
     lw t1 snakeStartIndex
     addi t1 t1 4
     
     lw t2 snakeBufferMaxLength
     
-    bne t1 t2 updateSnake_Branch_DontResetStartIndex #if snakeStartIndex is equal to snakeMaxLength set startIndex to 0
+    bne t1 t2 updateSnake_Branch_DontResetStartIndex # if snakeStartIndex equals to snakeMaxLength, reset it to 0
 
-    #reset start inex
+    # reset start inex
     li t1 0
 
 updateSnake_Branch_DontResetStartIndex:
     la t0 snakeStartIndex
     sw t1 0 t0
-    #store current location in snake array
+    # store current snake head position in snake array
     mv a0 s0
     mv a1 s1
-    li a2 0    #location offset 0
+    li a2 0    # location offset 0
     
     addi sp sp -4
     sw ra 0 sp
@@ -151,30 +151,30 @@ updateSnake_Branch_DontResetStartIndex:
 updateSnake_Branch_ResetStartIndex:
     
 drawSnake:
-    addi sp sp -4    #push ra
+    addi sp sp -4    # push ra
     sw ra 0 sp
     
-    # remove last pixel
-    lw a0 snakeLength    #location offset is negative length
+    # remove last pixel of snake's tail
+    lw a0 snakeLength    # location offset is negative length
     not a0 a0
     addi a0 a0 1
        
-    jal ra loadLocationFromSnakeArray    #get location in a0 and a1
+    jal ra loadLocationFromSnakeArray    # get location in a0 and a1
     
-    li a2 0    #color black
+    li a2 0    # color black (erase pixel)
     
     jal ra paintPixel
     
-    # paint front pixel
+    # paint snake's head in yellow
     mv a0 s0
     mv a1 s1
     
     li a2 0xffff00
     jal ra paintPixel
     
-    # check self collision
+    # check self-collision
     li s10 -4
-    lw s9 snakeLength    #location offset is negative length
+    lw s9 snakeLength    # location offset is negative length
     not s9 s9
     addi s9 s9 1
     
@@ -199,19 +199,19 @@ collisionFoundFirstCoordinate:
 collisionFound:
     jal x0 end
     
-    lw ra 0 sp     #pop ra
+    lw ra 0 sp     # pop ra
     addi sp sp 4
     ret
 paintPixel:
     li t1 LED_MATRIX_0_BASE
     li t3 LED_MATRIX_0_WIDTH
 
-    add t0 x0 t3 		# Anzahl der Spalten 
-    mul t2 a1 t0 		# y * Anzahl der Spalten 
-    add t2 t2 a0 		# + x-Koordinate 
-    addi t0 x0 4 		# Größe eines Eintrags 
-    mul t2 t2 t0 		# mal Offset 
-    add t2 t2 t1 		# + Basisadresse 
+    add t0 x0 t3 		# column count
+    mul t2 a1 t0 		# y * column count
+    add t2 t2 a0 		# + x-coordinate
+    addi t0 x0 4 		# size of color entry
+    mul t2 t2 t0 		# times offset
+    add t2 t2 t1 		# + base adress
 
     sw a2 0 t2
     ret
@@ -224,7 +224,7 @@ loadLocationFromSnakeArray:
     la t2 snake
     bge t0 t2 loadLocationInSnakeArray_BranchResume
     
-    #handle outside of array
+    # handle wraparound when accessing snake array
     lw t2 snakeBufferMaxLength
     add t0 t0 t2
     
@@ -244,7 +244,7 @@ storeLocationInSnakeArray:
     la t2 snake
     bge t0 t2 storeLocationInSnakeArray_BranchResume
     
-    #handle outside of array
+    # handle wraparound when accessing snake array
     lw t2 snakeBufferMaxLength
     add t0 t0 t2
     
@@ -262,12 +262,12 @@ checkForBerry:
     lh a1 0 t0
     
     # draw berry
-    addi sp sp -4    #push ra
+    addi sp sp -4    # push ra
     sw ra 0 sp
     
     jal ra drawBerry
     
-    lw ra 0 sp    #pop ra
+    lw ra 0 sp    # pop ra
     addi sp sp 4
     
     bne s0 a0 return
@@ -281,7 +281,7 @@ berryFound:
     bge t1 t2 updateBerryLocation
     sw t1 0 t0
 updateBerryLocation:
-    addi sp sp -4    #push ra
+    addi sp sp -4    # push ra
     sw ra 0 sp
     
     jal ra calculateRandom5Bits
@@ -290,7 +290,7 @@ updateBerryLocation:
     mv a1 a0
     mv a0 s10
     
-    lw ra 0 sp    #pop ra
+    lw ra 0 sp    # pop ra
     addi sp sp 4
     
     la t0 berryLocation
@@ -298,21 +298,21 @@ updateBerryLocation:
     addi t0 t0 2
     sh a1 0 t0
 drawBerry:
-    addi sp sp -4    #push ra
+    addi sp sp -4    # push ra
     sw ra 0 sp
     
     # remove last pixel
-    li a2 0xff00ff    #color purple
+    li a2 0xff00ff    # color purple
     
     jal ra paintPixel
     
-    lw ra 0 sp    #pop ra
+    lw ra 0 sp    # pop ra
     addi sp sp 4
     ret
 
 calculateRandom5Bits:
-    # based on https://stackoverflow.com/questions/35583343/generating-random-numbers-in-assembly
-    # but its cursed
+    # based on https://stackoverflow.com/questions/35583343/generating-random-numbers-in-assembly,
+    # but slightly simlified
     lw t0 randomNumber
     lw t1 randomSeed
     lw t2 weylSequence
@@ -334,7 +334,7 @@ calculateRandom5Bits:
 return:
     ret
 returnFromStack:
-    lw ra 0 sp    #pop ra
+    lw ra 0 sp    # pop ra
     addi sp sp 4
     ret
 end:
