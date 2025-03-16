@@ -312,7 +312,7 @@ drawBerry:
 
 calculateRandom5Bits:
     # based on https://stackoverflow.com/questions/35583343/generating-random-numbers-in-assembly,
-    # but slightly simlified
+    # but slightly simplified
     lw t0 randomNumber
     lw t1 randomSeed
     lw t2 weylSequence
