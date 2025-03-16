@@ -1,5 +1,5 @@
 # Risc-V Apps
-These programs are written in Risc-V Assembly ISA. You can run Risc-V with a simulator like [https:\/\/github.com\/mortbopet\/Ripes\|Ripes].
+These programs are written in Risc-V Assembly ISA. You can run Risc-V with a simulator like [Ripes](https:\/\/github.com\/mortbopet\/Ripes\).
 # Snake
 Simple snake game using the LED matrix and D-pad of Ripes' I\/O tab.
 
